@@ -1,0 +1,32 @@
+{
+    "expenses": [
+        {
+            "id": 1,
+            "name": "nonton mario bros sama bro",
+            "nominal": 90000,
+            "category": "movie",
+            "date": "06-04-2023"
+        },
+        {
+            "id": 3,
+            "name": "makan steak",
+            "nominal": 300000,
+            "category": "eat",
+            "date": "06-05-2023"
+        },
+        {
+            "id": 4,
+            "name": "beli music virtual insanity",
+            "nominal": 150000,
+            "category": "music",
+            "date": "06-06-2023"
+        },
+        {
+            "id": 5,
+            "name": "ongkos bus",
+            "nominal": 5000,
+            "category": "transport",
+            "date": "06-05-2023"
+        }
+    ]
+}
