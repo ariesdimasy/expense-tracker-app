@@ -98,41 +98,45 @@ const expenseUpdate = (req, res) => {
   try {
     const id = req.params.id;
 
-    const expenseIndex = expenses.findIndex((item) => item.id === Number(id));
+    const newData = {
+      name: req.body.name,
+      nominal: req.body.nominal,
+      category: req.body.category,
+      date: req.body.date,
+    };
 
-    if (expenseIndex === -1) {
-      res.status(404).send({
-        success: false,
-        message: "expense data not found",
-        data: {},
-      });
-    } else {
-      const newData = {
-        name: req.body.name || expenses[expenseIndex].name,
-        nominal: req.body.nominal || expenses[expenseIndex].nominal,
-        category: req.body.category || expenses[expenseIndex].category,
-        date: req.body.date || expenses[expenseIndex].date,
-      };
+    connection.query(
+      `UPDATE expenses SET name='${newData.name}', nominal='${newData.nominal}', category='${newData.category}', date='${newData.date}', created_at=now() WHERE id = ${id}`,
+      (err, result) => {
+        if (err) throw err;
+        res.status(200).send({
+          success: true,
+          message: "expense sucessfully updated",
+          data: result,
+        });
+      }
+    );
+  } catch (err) {
+    res.status(500).send({
+      success: false,
+      message: err.message,
+      data: null,
+    });
+  }
+};
 
-      expenses[expenseIndex] = { id: Number(id), ...newData };
-      const newExpenses = expenses;
+const expenseDelete = (req, res) => {
+  try {
+    const id = req.params.id;
 
-      const newWriteData = JSON.stringify(
-        {
-          expenses: newExpenses,
-        },
-        null,
-        4
-      );
-
-      fs.writeFileSync("./db.json", newWriteData);
-
+    connection.query(`DELETE FROM expenses WHERE id = ${id}`, (err, result) => {
+      if (err) throw err;
       res.status(200).send({
         success: true,
-        message: "expense sucessfully updated",
-        data: expenses[expenseIndex],
+        message: "expense sucessfully deleted",
+        data: result,
       });
-    }
+    });
   } catch (err) {
     res.status(500).send({
       success: false,
@@ -143,61 +147,54 @@ const expenseUpdate = (req, res) => {
 };
 
 const expenseTotal = (req, res) => {
-  const start_date = req.query.start_date
-    ? new Date(req.query.start_date)
-    : null;
-  const end_date = req.query.end_date ? new Date(req.query.end_date) : null;
-  const category = req.query.category;
+  try {
+    const start_date = req.query.start_date;
+    const end_date = req.query.end_date;
+    const category = req.query.category;
 
-  if (start_date > end_date) {
-    return res.status(400).send({
-      success: false,
-      message: "end_date should be bigger than start_date",
-      data: {},
-    });
-  }
+    var result_query =
+      "SELECT SUM(expenses.nominal) as 'total' FROM expenses WHERE 1=1 ";
 
-  var resultData = [];
+    if (start_date > end_date) {
+      return res.status(400).send({
+        success: false,
+        message: "end_date should be bigger than start_date",
+        data: {},
+      });
+    }
 
-  console.log("start_date => ", start_date.getDate(), start_date.getMonth());
-  console.log("end_date => ", end_date.getDate(), end_date.getMonth());
+    if (start_date && end_date) {
+      result_query += `AND date BETWEEN '${start_date}' AND '${end_date}'`;
+    } else {
+      return res.status(400).send({
+        success: false,
+        message: "expense start_date or end_date request error",
+        data: {},
+      });
+    }
 
-  if (start_date && end_date) {
-    resultData = expenses.filter((item) => {
-      if (
-        new Date(item.date) >= start_date &&
-        new Date(item.date) <= end_date
-      ) {
-        return item;
+    if (category) {
+      result_query += `AND category = '${category}'`;
+    }
+
+    connection.query(result_query, (err, result) => {
+      if (err) throw err;
+      if (result) {
+        console.log("result => ", result);
+        return res.status(200).send({
+          success: true,
+          message: "expense sucessfully fetched",
+          data: result,
+        });
       }
     });
-  } else {
-    return res.status(400).send({
+  } catch (err) {
+    res.status(500).send({
       success: false,
-      message: "expense start_date or end_date request error",
-      data: {},
+      message: err.message,
+      data: null,
     });
   }
-
-  if (category) {
-    resultData = expenses.filter((item) => {
-      if (item.category === category) {
-        return item;
-      }
-    });
-  }
-
-  var total = 0;
-  resultData.forEach((item) => {
-    total = total + item.nominal;
-  });
-
-  return res.status(200).send({
-    success: true,
-    message: "expense sucessfully fetched",
-    data: resultData,
-    total: total,
-  });
 };
 
 module.exports = {
@@ -205,5 +202,6 @@ module.exports = {
   expenseDetail,
   expenseCreate,
   expenseUpdate,
+  expenseDelete,
   expenseTotal,
 };
