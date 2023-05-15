@@ -6,7 +6,6 @@ const port = 4567
 app.use(express.json())
 
 const routes = require("./routers")
-const { route } = require("./routers/expenseRoute")
 
 app.get("/",(req, res) => {
     res.status(200).send({
@@ -16,6 +15,7 @@ app.get("/",(req, res) => {
 })
 
 app.use("/expense",routes.expenseRoute)
+app.use("/user", routes.userRoute)
 
 app.listen(port,() => {
     console.log("server success listen to port = ", port )

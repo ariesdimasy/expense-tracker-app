@@ -3,6 +3,7 @@ const router = express.Router();
 
 const controller = require("../controllers");
 
+router.get("/generate-table",controller.expenseController.expenseGenerate)
 router.get("/", controller.expenseController.expenseList);
 router.get("/detail/total", controller.expenseController.expenseTotal);
 router.get("/:id", controller.expenseController.expenseDetail);
